@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>360° Stitched Panorama Studio | Vikram Mama Plot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    :root {
+      --primary: #f59e0b;
+      --primary-glow: rgba(245, 158, 11, 0.4);
+      --dark-bg: #070a12;
+      --panel-bg: rgba(15, 23, 42, 0.92);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      background: var(--dark-bg);
+      color: var(--text-main);
+      overflow: hidden;
+      height: 100vh;
+      height: 100dvh;
+      width: 100vw;
+      position: fixed;
+    }
+
+    /* Top Navigation Header */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: linear-gradient(180deg, rgba(7, 10, 18, 0.96) 0%, rgba(7, 10, 18, 0.7) 70%, transparent 100%);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    header * {
+      pointer-events: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 20px;
+      box-shadow: 0 0 20px var(--primary-glow);
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand h1 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge-360 {
+      background: #f59e0b;
+      color: #000;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .brand p {
+      font-size: 11px;
+      color: var(--primary);
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* View Mode Tabs */
+    .view-mode-tabs {
+      display: flex;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(16px);
+      padding: 4px;
+      border-radius: 30px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      flex-shrink: 0;
+    }
+
+    .mode-tab-btn {
+      padding: 7px 16px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 24px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .mode-tab-btn.active, .mode-tab-btn:hover {
+      background: var(--primary);
+      color: #000;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    /* Main Viewport Container */
+    #viewport-container {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      background: #000;
+      touch-action: none;
+    }
+
+    /* Tab 1: 360° Three.js Canvas */
+    #three-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      z-index: 10;
+      touch-action: none;
+    }
+
+    #three-canvas:active {
+      cursor: grabbing;
+    }
+
+    /* Tab 2: Full Continuous Stitched Panorama Strip View */
+    #strip-container {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #111827 0%, #070a12 100%);
+      z-index: 20;
+      padding: 80px 16px 24px;
+    }
+
+    .strip-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1300px;
+      height: 52vh;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
+      background: #000;
+      cursor: grab;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .strip-wrapper:active {
+      cursor: grabbing;
+    }
+
+    #stitched-preview-img {
+      height: 100%;
+      width: auto;
+      display: block;
+      pointer-events: none;
+    }
+
+    .strip-actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .btn-download {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px var(--primary-glow);
+      text-decoration: none;
+      transition: all 0.2s;
+      flex: 1 1 240px;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px var(--primary-glow);
+    }
+
+    /* HUD Elements */
+    .hud-center-group {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+      width: 90%;
+      max-width: 480px;
+    }
+
+    .hud-center-group * {
+      pointer-events: auto;
+    }
+
+    /* Center Compass Heading HUD */
+    .compass-hud {
+      background: var(--panel-bg);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      padding: 5px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .compass-dial {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 46px;
+      text-align: center;
+    }
+
+    .compass-direction {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .photo-caption-hud {
+      background: rgba(7, 10, 18, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .photo-caption-hud span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Floating Toolbar (Right) */
+    .toolbar-hud {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      padding: 10px;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .tool-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:hover, .tool-btn.active {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+      transform: scale(1.06);
+    }
+
+    /* Radar Widget */
+    .radar-widget {
+      position: absolute;
+      bottom: 195px;
+      right: 18px;
+      width: 66px;
+      height: 66px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .radar-needle {
+      width: 3px;
+      height: 32px;
+      background: linear-gradient(180deg, #ef4444 50%, #94a3b8 50%);
+      border-radius: 3px;
+      transform-origin: center center;
+    }
+
+    .radar-label {
+      position: absolute;
+      top: 4px;
+      font-size: 8px;
+      font-weight: 800;
+      color: #ef4444;
+    }
+
+    /* Bottom 360° Photo Carousel Drawer */
+    .photo-tour-drawer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(0deg, rgba(7, 10, 18, 0.98) 0%, rgba(7, 10, 18, 0.92) 85%, transparent 100%);
+      padding: 12px 20px 14px;
+      transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .photo-tour-drawer.collapsed {
+      transform: translateY(calc(100% - 46px));
+    }
+
+    .drawer-toggle-btn {
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--glass-border);
+      border-bottom: none;
+      color: var(--text-main);
+      padding: 5px 16px;
+      border-radius: 12px 12px 0 0;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .drawer-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .drawer-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .slider-track-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .angle-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.15);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .angle-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .slider-angle-display {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      min-width: 65px;
+      text-align: right;
+    }
+
+    /* Thumbnails Carousel */
+    .thumbnails-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .thumbnails-strip::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    .thumbnails-strip::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+    }
+
+    .thumb-card {
+      flex: 0 0 120px;
+      height: 84px;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: #000;
+    }
+
+    .thumb-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.72;
+      transition: opacity 0.2s ease, transform 0.25s ease;
+      pointer-events: none;
+    }
+
+    .thumb-card:hover img {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+
+    .thumb-card.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+
+    .thumb-card.active img {
+      opacity: 1;
+    }
+
+    .thumb-badge {
+      position: absolute;
+      bottom: 4px;
+      left: 4px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-family: 'Space Grotesk', monospace;
+    }
+
+    /* Fullscreen Modal Lightbox */
+    #lightbox {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.96);
+      backdrop-filter: blur(12px);
+      z-index: 3000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    #lightbox img {
+      max-width: 95vw;
+      max-height: 88vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+      object-fit: contain;
+    }
+
+    #lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      color: #fff;
+      font-size: 28px;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.12);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Stitching Progress Overlay */
+    #loading-overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #070a12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+      text-align: center;
+      transition: opacity 0.4s ease;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(245, 158, 11, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s infinite linear;
+      margin-bottom: 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ========================================================= */
+    /* RESPONSIVE MEDIA QUERIES (Mobile, Tablet, Desktop)        */
+    /* ========================================================= */
+
+    /* Tablet and Small Laptops (<= 1024px) */
+    @media (max-width: 1024px) {
+      header {
+        padding: 12px 18px;
+      }
+      .toolbar-hud {
+        right: 14px;
+      }
+      .radar-widget {
+        right: 14px;
+        bottom: 185px;
+      }
+    }
+
+    /* Mobile Screens & Small Tablets (<= 768px) */
+    @media (max-width: 768px) {
+      header {
+        padding: 10px 14px;
+      }
+      .brand-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 17px;
+      }
+      .brand h1 {
+        font-size: 15px;
+      }
+      .brand p {
+        display: none; /* Hide subtitle on mobile to give room to tabs */
+      }
+      .mode-tab-btn {
+        padding: 6px 12px;
+        font-size: 11px;
+      }
+      .mode-tab-btn span {
+        display: inline;
+      }
+
+      /* Compact HUD for Mobile */
+      .hud-center-group {
+        top: 66px;
+        gap: 6px;
+      }
+      .compass-hud {
+        padding: 4px 12px;
+      }
+      .compass-dial {
+        font-size: 13px;
+        min-width: 40px;
+      }
+      .compass-direction {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+      .photo-caption-hud {
+        font-size: 11px;
+        padding: 4px 10px;
+      }
+
+      /* Move Radar to top right so it doesn't block drawer or bottom */
+      .radar-widget {
+        top: 68px;
+        bottom: auto;
+        right: 12px;
+        width: 52px;
+        height: 52px;
+      }
+      .radar-needle {
+        height: 26px;
+        width: 3px;
+      }
+
+      /* Toolbar HUD on Mobile */
+      .toolbar-hud {
+        right: 12px;
+        top: auto;
+        bottom: 180px;
+        transform: none;
+        padding: 6px;
+        gap: 8px;
+        border-radius: 14px;
+      }
+      .tool-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
+      }
+
+      /* Bottom Drawer Mobile adjustments */
+      .photo-tour-drawer {
+        padding: 10px 14px 12px;
+      }
+      .drawer-hint {
+        display: none; /* Hide secondary hint on mobile */
+      }
+      .thumb-card {
+        flex: 0 0 100px;
+        height: 70px;
+      }
+      .thumb-badge {
+        font-size: 8px;
+        padding: 1px 4px;
+      }
+
+      /* Strip view container */
+      #strip-container {
+        padding: 70px 12px 20px;
+      }
+      .strip-wrapper {
+        height: 48vh;
+      }
+      .btn-download {
+        font-size: 12px;
+        padding: 9px 16px;
+      }
+    }
+
+    /* Extra Small Mobile (<= 480px) */
+    @media (max-width: 480px) {
+      .brand h1 span.title-label {
+        display: none; /* Keep short brand on extra small */
+      }
+      .brand h1:after {
+        content: "360°";
+      }
+      .badge-360 {
+        display: none;
+      }
+      .mode-tab-btn {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+      .thumb-card {
+        flex: 0 0 92px;
+        height: 64px;
+      }
+      .toolbar-hud {
+        bottom: 175px;
+      }
+    }
+
+    /* Landscape orientation on mobile devices */
+    @media (max-height: 500px) and (orientation: landscape) {
+      header {
+        padding: 6px 14px;
+      }
+      .brand-icon {
+        width: 30px;
+        height: 30px;
+        font-size: 14px;
+      }
+      .hud-center-group {
+        top: 52px;
+      }
+      .radar-widget {
+        top: 52px;
+        width: 42px;
+        height: 42px;
+      }
+      .toolbar-hud {
+        right: 8px;
+        bottom: 120px;
+        gap: 6px;
+        padding: 4px;
+      }
+      .tool-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+      }
+      .photo-tour-drawer {
+        padding: 6px 12px 8px;
+      }
+      .thumb-card {
+        flex: 0 0 85px;
+        height: 56px;
+      }
+      .strip-wrapper {
+        height: 40vh;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-panorama"></i>
+      </div>
+      <div class="brand-text">
+        <h1>
+          <span class="title-label">Vikram Mama Plot</span>
+          <span class="badge-360">Stitched 360°</span>
+        </h1>
+        <p>16 On-Site Photos Converted into a Seamless 360° Panorama</p>
+      </div>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="view-mode-tabs">
+      <button class="mode-tab-btn active" id="btn-mode-360" onclick="switchViewerTab('360')">
+        <i class="fa-solid fa-street-view"></i> <span>360° View</span>
+      </button>
+      <button class="mode-tab-btn" id="btn-mode-strip" onclick="switchViewerTab('strip')">
+        <i class="fa-solid fa-image"></i> <span>Panorama Strip</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Viewport Area -->
+  <div id="viewport-container">
+    <!-- Mode 1: Three.js 360° Stitched Panoramic Viewport -->
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Mode 2: Full Continuous Stitched Panorama Strip Container -->
+    <div id="strip-container">
+      <div class="strip-wrapper" id="strip-scroll">
+        <img id="stitched-preview-img" src="" alt="Stitched 360° Panorama">
+      </div>
+      <div class="strip-actions">
+        <a id="btn-dl-pano" download="Vikram_Mama_Plot_Stitched_360_Panorama.jpg" class="btn-download">
+          <i class="fa-solid fa-download"></i> Download Stitched Panorama (8K)
+        </a>
+        <button class="mode-tab-btn" style="background: rgba(255,255,255,0.08); padding: 10px 18px;" onclick="switchViewerTab('360')">
+          <i class="fa-solid fa-arrow-left"></i> Back to 360°
+        </button>
+      </div>
+    </div>
+
+    <!-- Center Compass & Heading Group HUD -->
+    <div class="hud-center-group">
+      <div class="compass-hud">
+        <i class="fa-solid fa-compass" style="color: var(--primary);"></i>
+        <span class="compass-dial" id="compass-deg">000°</span>
+        <span class="compass-direction" id="compass-dir">North</span>
+      </div>
+
+      <div class="photo-caption-hud" id="photo-caption">
+        <i class="fa-solid fa-location-dot" style="color: var(--primary);"></i>
+        <span id="caption-text">Approach Road & Utility Poles</span>
+      </div>
+    </div>
+
+    <!-- Floating Controls Toolbar -->
+    <div class="toolbar-hud">
+      <button class="tool-btn active" id="btn-autorotate" title="Toggle 360° Auto-Rotate" onclick="toggleAutoRotate()">
+        <i class="fa-solid fa-rotate"></i>
+      </button>
+      <button class="tool-btn" id="btn-gyro" title="Enable Mobile Motion Sensor / Gyroscope" onclick="toggleGyroscope()">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+      </button>
+      <button class="tool-btn" title="Zoom In" onclick="zoomView(-8)">
+        <i class="fa-solid fa-magnifying-glass-plus"></i>
+      </button>
+      <button class="tool-btn" title="Zoom Out" onclick="zoomView(8)">
+        <i class="fa-solid fa-magnifying-glass-minus"></i>
+      </button>
+      <button class="tool-btn" title="Inspect Photo in Fullscreen" onclick="inspectCurrentPhoto()">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+      <button class="tool-btn" title="Toggle Fullscreen App" onclick="toggleFullscreen()">
+        <i class="fa-solid fa-up-right-and-down-left-and-up-left-and-down-right"></i>
+      </button>
+    </div>
+
+    <!-- Radar Needle Widget -->
+    <div class="radar-widget">
+      <span class="radar-label">N</span>
+      <div class="radar-needle" id="radar-needle"></div>
+    </div>
+
+    <!-- Bottom 360° Photo Carousel Drawer with Collapse Toggle -->
+    <div class="photo-tour-drawer" id="tour-drawer">
+      <button class="drawer-toggle-btn" id="btn-drawer-toggle" onclick="toggleDrawer()">
+        <i class="fa-solid fa-chevron-down" id="drawer-arrow"></i>
+        <span id="drawer-toggle-label">Hide Thumbnails</span>
+      </button>
+
+      <div class="drawer-header">
+        <div class="drawer-title">
+          <i class="fa-solid fa-images" style="color: var(--primary);"></i>
+          <span>16 Source Photos in 360° Panorama</span>
+        </div>
+        <div class="drawer-hint">
+          Drag screen or click thumbnails to pan in 360°
+        </div>
+      </div>
+
+      <!-- Slider for 360° navigation -->
+      <div class="slider-track-wrap">
+        <span style="font-size: 11px; font-weight: 700; color: var(--text-muted);">0° (N)</span>
+        <input type="range" min="0" max="360" value="0" class="angle-slider" id="angle-range" oninput="onAngleSlider(this.value)">
+        <span class="slider-angle-display" id="slider-display">000° N</span>
+      </div>
+
+      <!-- Thumbnail Strip of the 16 Photos -->
+      <div class="thumbnails-strip" id="thumbs-container"></div>
+    </div>
+  </div>
+
+  <!-- Loading Screen -->
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+    <h3 style="font-weight: 800; font-size: 18px; margin-bottom: 6px;">Stitching 16 Photos into 360° Panorama...</h3>
+    <p style="color: var(--text-muted); font-size: 12px;">Blending edges & building seamless 360° panorama</p>
+  </div>
+
+  <!-- Lightbox Modal for Photo Inspection -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <div id="lightbox-close">&times;</div>
+    <img id="lightbox-img" src="" alt="Site Photo" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- Three.js Library from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <script>
+    // -------------------------------------------------------------
+    // 16 ACTUAL SITE PHOTOS IN 360° CLOCKWISE SEQUENCE
+    // -------------------------------------------------------------
+    const sitePhotos = [
+      { id: 0, angle: 0, heading: "N", label: "Approach Road & Utility Poles", file: "images/WhatsApp Image 2026-10-24 at 4.53.50 PM.jpeg" },
+      { id: 1, angle: 22.5, heading: "NNE", label: "Front Road & Toyota Innova", file: "images/WhatsApp Image 2026-10-24 at 4.53.49 PM.jpeg" },
+      { id: 2, angle: 45, heading: "NE", label: "Plot Entry & Innova Shoulder", file: "images/WhatsApp Image 2026-10-24 at 4.53.55 PM (1).jpeg" },
+      { id: 3, angle: 67.5, heading: "ENE", label: "Brick Boundary Line Close-up", file: "images/WhatsApp Image 2026-10-24 at 4.53.53 PM (1).jpeg" },
+      { id: 4, angle: 90, heading: "E", label: "East Brick Boundary Line", file: "images/WhatsApp Image 2026-10-24 at 4.53.51 PM (2).jpeg" },
+      { id: 5, angle: 112.5, heading: "ESE", label: "Length Line & Grazing Cows", file: "images/WhatsApp Image 2026-10-24 at 4.53.51 PM (3).jpeg" },
+      { id: 6, angle: 135, heading: "SE", label: "SE Corner & Electric Pole", file: "images/WhatsApp Image 2026-10-24 at 4.53.52 PM.jpeg" },
+      { id: 7, angle: 157.5, heading: "SSE", label: "Precast Concrete Wall Panels", file: "images/WhatsApp Image 2026-10-24 at 4.53.54 PM.jpeg" },
+      { id: 8, angle: 180, heading: "S", label: "South Boundary & Setting Sun", file: "images/WhatsApp Image 2026-10-24 at 4.53.45 PM (1).jpeg" },
+      { id: 9, angle: 202.5, heading: "SSW", label: "Plot Center Facing Wall", file: "images/WhatsApp Image 2026-10-24 at 4.53.51 PM.jpeg" },
+      { id: 10, angle: 225, heading: "SW", label: "Sunset Glow Over Plot", file: "images/WhatsApp Image 2026-10-24 at 4.53.53 PM.jpeg" },
+      { id: 11, angle: 247.5, heading: "WSW", label: "Sunset over Columns & House", file: "images/WhatsApp Image 2026-10-24 at 4.53.55 PM.jpeg" },
+      { id: 12, angle: 270, heading: "W", label: "West View & Cows Grazing", file: "images/WhatsApp Image 2026-10-24 at 4.53.51 PM (1).jpeg" },
+      { id: 13, angle: 292.5, heading: "WNW", label: "RCC Columns & Red Brick Wall", file: "images/WhatsApp Image 2026-10-24 at 4.53.56 PM.jpeg" },
+      { id: 14, angle: 315, heading: "NW", label: "White 2-Story Building & Pillars", file: "images/WhatsApp Image 2026-10-24 at 4.53.45 PM.jpeg" },
+      { id: 15, angle: 337.5, heading: "NNW", label: "Open Field & Distant Houses", file: "images/WhatsApp Image 2026-10-24 at 4.53.54 PM (1).jpeg" }
+    ];
+
+    let currentPhotoIndex = 0;
+    let currentTab = '360';
+    let stitchedCanvas = null;
+    let isDrawerCollapsed = false;
+
+    // Populate Thumbnail Strip
+    const thumbsContainer = document.getElementById('thumbs-container');
+    sitePhotos.forEach((item, index) => {
+      const card = document.createElement('div');
+      card.className = `thumb-card ${index === 0 ? 'active' : ''}`;
+      card.id = `thumb-${index}`;
+      card.onclick = () => jumpToAngle(item.angle, index);
+      card.innerHTML = `
+        <img src="${item.file}" alt="${item.label}" loading="lazy">
+        <span class="thumb-badge">${Math.round(item.angle)}° ${item.heading}</span>
+      `;
+      thumbsContainer.appendChild(card);
+    });
+
+    // -------------------------------------------------------------
+    // AUTOMATIC PANORAMA STITCHING ENGINE
+    // Stitches all 16 photos with seamless gradient alpha-blending
+    // -------------------------------------------------------------
+    async function generateStitchedPanorama() {
+      const loadedImages = [];
+      for (const p of sitePhotos) {
+        const img = new Image();
+        img.src = p.file;
+        await new Promise((res) => {
+          img.onload = res;
+          img.onerror = () => {
+            console.warn("Could not load image:", p.file);
+            res();
+          };
+        });
+        loadedImages.push(img);
+      }
+
+      const sliceW = 512;
+      const H = 1024;
+      const count = loadedImages.length;
+      const totalW = sliceW * count; // 8192px ultra-wide continuous panorama
+      const overlap = 70; // 70px soft blending seam
+
+      stitchedCanvas = document.createElement('canvas');
+      stitchedCanvas.width = totalW;
+      stitchedCanvas.height = H;
+      const ctx = stitchedCanvas.getContext('2d');
+
+      ctx.fillStyle = '#0a0f1d';
+      ctx.fillRect(0, 0, totalW, H);
+
+      for (let i = 0; i < count; i++) {
+        const img = loadedImages[i];
+        if (!img || !img.width) continue;
+
+        const x = i * sliceW;
+
+        const temp = document.createElement('canvas');
+        temp.width = sliceW + overlap;
+        temp.height = H;
+        const tctx = temp.getContext('2d');
+
+        tctx.drawImage(img, 0, 0, img.width, img.height, 0, 0, sliceW + overlap, H);
+
+        if (i > 0) {
+          tctx.globalCompositeOperation = 'destination-out';
+          const grad = tctx.createLinearGradient(0, 0, overlap, 0);
+          grad.addColorStop(0, 'rgba(0,0,0,1)');
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          tctx.fillStyle = grad;
+          tctx.fillRect(0, 0, overlap, H);
+          tctx.globalCompositeOperation = 'source-over';
+        }
+
+        ctx.drawImage(temp, x, 0);
+      }
+
+      // Smooth wrap-around seam between last photo and first photo
+      if (loadedImages[0] && loadedImages[0].width) {
+        const loopTemp = document.createElement('canvas');
+        loopTemp.width = overlap;
+        loopTemp.height = H;
+        const lctx = loopTemp.getContext('2d');
+        lctx.drawImage(loadedImages[0], 0, 0, loadedImages[0].width, loadedImages[0].height, 0, 0, overlap, H);
+        lctx.globalCompositeOperation = 'destination-in';
+        const lgrad = lctx.createLinearGradient(0, 0, overlap, 0);
+        lgrad.addColorStop(0, 'rgba(0,0,0,1)');
+        lgrad.addColorStop(1, 'rgba(0,0,0,0)');
+        lctx.fillStyle = lgrad;
+        lctx.fillRect(0, 0, overlap, H);
+        ctx.drawImage(loopTemp, totalW - overlap, 0);
+      }
+
+      const panoDataUrl = stitchedCanvas.toDataURL('image/jpeg', 0.92);
+      document.getElementById('stitched-preview-img').src = panoDataUrl;
+      document.getElementById('btn-dl-pano').href = panoDataUrl;
+
+      return stitchedCanvas;
+    }
+
+    // -------------------------------------------------------------
+    // THREE.JS 360° PANORAMA SPHERICAL VIEWER
+    // -------------------------------------------------------------
+    let scene, camera, renderer, panoramaMesh;
+    let isUserInteracting = false;
+    let onPointerDownMouseX = 0, onPointerDownMouseY = 0;
+    let lon = 0, onPointerDownLon = 0;
+    let lat = 0, onPointerDownLat = 0;
+    let phi = 0, theta = 0;
+    let fov = 75;
+    let isAutoRotating = true;
+
+    // Mobile Pinch-to-zoom tracking
+    let touchStartDist = 0;
+    let touchStartFov = 75;
+
+    // Gyroscope / Motion tracking
+    let isGyroEnabled = false;
+    let gyroAlpha = 0, gyroBeta = 0, gyroGamma = 0;
+
+    async function init360Viewer() {
+      const canvas = document.getElementById('three-canvas');
+
+      scene = new THREE.Scene();
+
+      camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 1, 2000);
+      camera.target = new THREE.Vector3(0, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const canvasTex = await generateStitchedPanorama();
+
+      const texture = new THREE.CanvasTexture(canvasTex);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.minFilter = THREE.LinearFilter;
+
+      const radius = 500;
+      const height = 750;
+      const cylinderGeo = new THREE.CylinderGeometry(radius, radius, height, 64, 1, true);
+      cylinderGeo.scale(-1, 1, 1);
+
+      const material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
+      panoramaMesh = new THREE.Mesh(cylinderGeo, material);
+      scene.add(panoramaMesh);
+
+      const capGeo = new THREE.CircleGeometry(radius * 1.05, 32);
+      const capMat = new THREE.MeshBasicMaterial({ color: 0x070a12, side: THREE.DoubleSide });
+      
+      const groundCap = new THREE.Mesh(capGeo, capMat);
+      groundCap.rotation.x = Math.PI / 2;
+      groundCap.position.y = -height / 2;
+      scene.add(groundCap);
+
+      const skyCap = new THREE.Mesh(capGeo, capMat);
+      skyCap.rotation.x = Math.PI / 2;
+      skyCap.position.y = height / 2;
+      scene.add(skyCap);
+
+      // Mouse & Pointer Listeners
+      canvas.addEventListener('pointerdown', onPointerDown);
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
+      canvas.addEventListener('wheel', onDocumentMouseWheel, { passive: false });
+
+      // Mobile Touch Listeners (Drag + Pinch-to-zoom)
+      canvas.addEventListener('touchstart', onTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', onTouchMove, { passive: false });
+      canvas.addEventListener('touchend', onTouchEnd);
+
+      window.addEventListener('resize', onWindowResize);
+      window.addEventListener('orientationchange', () => setTimeout(onWindowResize, 150));
+
+      hideLoader();
+      animate();
+    }
+
+    function hideLoader() {
+      const loader = document.getElementById('loading-overlay');
+      loader.style.opacity = '0';
+      setTimeout(() => loader.style.display = 'none', 400);
+    }
+
+    // Pointer Events for 360 Rotation
+    function onPointerDown(event) {
+      if (event.isPrimary === false) return;
+      isUserInteracting = true;
+      onPointerDownMouseX = event.clientX;
+      onPointerDownMouseY = event.clientY;
+      onPointerDownLon = lon;
+      onPointerDownLat = lat;
+    }
+
+    function onPointerMove(event) {
+      if (event.isPrimary === false || !isUserInteracting) return;
+      lon = (onPointerDownMouseX - event.clientX) * 0.16 + onPointerDownLon;
+      lat = (event.clientY - onPointerDownMouseY) * 0.14 + onPointerDownLat;
+    }
+
+    function onPointerUp(event) {
+      if (event.isPrimary === false) return;
+      isUserInteracting = false;
+    }
+
+    // Mobile Touch Events with Native Pinch-To-Zoom
+    function onTouchStart(e) {
+      if (e.touches.length === 1) {
+        isUserInteracting = true;
+        onPointerDownMouseX = e.touches[0].clientX;
+        onPointerDownMouseY = e.touches[0].clientY;
+        onPointerDownLon = lon;
+        onPointerDownLat = lat;
+      } else if (e.touches.length === 2) {
+        // Pinch start
+        isUserInteracting = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchStartDist = Math.hypot(dx, dy);
+        touchStartFov = fov;
+      }
+    }
+
+    function onTouchMove(e) {
+      e.preventDefault();
+      if (e.touches.length === 1 && isUserInteracting) {
+        lon = (onPointerDownMouseX - e.touches[0].clientX) * 0.18 + onPointerDownLon;
+        lat = (e.touches[0].clientY - onPointerDownMouseY) * 0.16 + onPointerDownLat;
+      } else if (e.touches.length === 2 && touchStartDist > 0) {
+        // Pinch zoom
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const factor = touchStartDist / dist;
+        fov = THREE.MathUtils.clamp(touchStartFov * factor, 35, 95);
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
+      }
+    }
+
+    function onTouchEnd(e) {
+      if (e.touches.length === 0) {
+        isUserInteracting = false;
+        touchStartDist = 0;
+      } else if (e.touches.length === 1) {
+        // Resumed single finger
+        isUserInteracting = true;
+        onPointerDownMouseX = e.touches[0].clientX;
+        onPointerDownMouseY = e.touches[0].clientY;
+        onPointerDownLon = lon;
+        onPointerDownLat = lat;
+      }
+    }
+
+    function onDocumentMouseWheel(event) {
+      event.preventDefault();
+      zoomView(event.deltaY * 0.05);
+    }
+
+    function zoomView(delta) {
+      fov = THREE.MathUtils.clamp(fov + delta, 35, 95);
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+
+    function toggleAutoRotate() {
+      isAutoRotating = !isAutoRotating;
+      document.getElementById('btn-autorotate').classList.toggle('active', isAutoRotating);
+    }
+
+    // Toggle Mobile Gyroscope Motion Controls
+    function toggleGyroscope() {
+      if (!window.DeviceOrientationEvent) {
+        alert("Device orientation / Gyroscope is not supported on this browser.");
+        return;
+      }
+
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS 13+ permission request
+        DeviceOrientationEvent.requestPermission().then(state => {
+          if (state === 'granted') {
+            enableGyro();
+          } else {
+            alert("Motion sensor permission denied.");
+          }
+        }).catch(console.error);
+      } else {
+        // Android / standard
+        enableGyro();
+      }
+    }
+
+    function enableGyro() {
+      isGyroEnabled = !isGyroEnabled;
+      document.getElementById('btn-gyro').classList.toggle('active', isGyroEnabled);
+
+      if (isGyroEnabled) {
+        isAutoRotating = false;
+        document.getElementById('btn-autorotate').classList.remove('active');
+        window.addEventListener('deviceorientation', handleOrientation);
+      } else {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
+    }
+
+    function handleOrientation(e) {
+      if (!isGyroEnabled) return;
+      if (e.alpha !== null) {
+        lon = -e.alpha;
+        if (e.beta !== null) {
+          lat = THREE.MathUtils.clamp(e.beta - 90, -45, 45);
+        }
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+
+    // Drawer Collapsing for Immersive Mobile Screen
+    function toggleDrawer() {
+      isDrawerCollapsed = !isDrawerCollapsed;
+      const drawer = document.getElementById('tour-drawer');
+      const arrow = document.getElementById('drawer-arrow');
+      const label = document.getElementById('drawer-toggle-label');
+
+      drawer.classList.toggle('collapsed', isDrawerCollapsed);
+      if (isDrawerCollapsed) {
+        arrow.className = 'fa-solid fa-chevron-up';
+        label.textContent = 'Show Thumbnails';
+      } else {
+        arrow.className = 'fa-solid fa-chevron-down';
+        label.textContent = 'Hide Thumbnails';
+      }
+    }
+
+    // Jump to angle from thumbnail or slider
+    function jumpToAngle(angle, index) {
+      lon = angle;
+      lat = 0;
+      currentPhotoIndex = index;
+      document.getElementById('angle-range').value = angle;
+      updateHUD(angle, sitePhotos[index].label);
+      highlightThumbnail(index);
+    }
+
+    function onAngleSlider(val) {
+      const angle = parseFloat(val);
+      lon = angle;
+      lat = 0;
+
+      let closestIdx = 0;
+      let minDiff = 999;
+      sitePhotos.forEach((p, i) => {
+        let diff = Math.abs(p.angle - angle);
+        if (diff > 180) diff = 360 - diff;
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      });
+
+      currentPhotoIndex = closestIdx;
+      updateHUD(angle, sitePhotos[closestIdx].label);
+      highlightThumbnail(closestIdx);
+    }
+
+    function highlightThumbnail(index) {
+      document.querySelectorAll('.thumb-card').forEach(c => c.classList.remove('active'));
+      const activeCard = document.getElementById(`thumb-${index}`);
+      if (activeCard) {
+        activeCard.classList.add('active');
+        activeCard.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+
+    function updateHUD(deg, label) {
+      const normalizedDeg = ((deg % 360) + 360) % 360;
+      const degStr = String(Math.round(normalizedDeg)).padStart(3, '0') + '°';
+      const heading = getHeading(normalizedDeg);
+
+      document.getElementById('compass-deg').textContent = degStr;
+      document.getElementById('slider-display').textContent = `${degStr} ${heading}`;
+      document.getElementById('compass-dir').textContent = heading;
+      document.getElementById('caption-text').textContent = label;
+
+      document.getElementById('radar-needle').style.transform = `rotate(${-normalizedDeg}deg)`;
+    }
+
+    function getHeading(deg) {
+      if (deg >= 337.5 || deg < 22.5) return "North";
+      if (deg >= 22.5 && deg < 67.5) return "North-East";
+      if (deg >= 67.5 && deg < 112.5) return "East";
+      if (deg >= 112.5 && deg < 157.5) return "South-East";
+      if (deg >= 157.5 && deg < 202.5) return "South";
+      if (deg >= 202.5 && deg < 247.5) return "South-West";
+      if (deg >= 247.5 && deg < 292.5) return "West";
+      return "North-West";
+    }
+
+    function onWindowResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    // Animation Loop
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (currentTab === '360') {
+        if (!isUserInteracting && isAutoRotating && !isGyroEnabled) {
+          lon += 0.08;
+        }
+
+        lat = Math.max(-50, Math.min(50, lat));
+        phi = THREE.MathUtils.degToRad(90 - lat);
+        theta = THREE.MathUtils.degToRad(lon);
+
+        const targetX = 500 * Math.sin(phi) * Math.sin(theta);
+        const targetY = 500 * Math.cos(phi);
+        const targetZ = -500 * Math.sin(phi) * Math.cos(theta);
+
+        camera.lookAt(targetX, targetY, targetZ);
+        renderer.render(scene, camera);
+
+        const curDeg = ((lon % 360) + 360) % 360;
+        document.getElementById('angle-range').value = curDeg;
+
+        let closestIdx = 0;
+        let minDiff = 999;
+        sitePhotos.forEach((p, i) => {
+          let diff = Math.abs(p.angle - curDeg);
+          if (diff > 180) diff = 360 - diff;
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = i;
+          }
+        });
+
+        if (closestIdx !== currentPhotoIndex) {
+          currentPhotoIndex = closestIdx;
+          highlightThumbnail(closestIdx);
+        }
+
+        updateHUD(curDeg, sitePhotos[currentPhotoIndex].label);
+      }
+    }
+
+    // Tab Switching
+    function switchViewerTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.mode-tab-btn').forEach(b => b.classList.remove('active'));
+
+      const canvas = document.getElementById('three-canvas');
+      const stripContainer = document.getElementById('strip-container');
+      const drawer = document.querySelector('.photo-tour-drawer');
+      const hudCenter = document.querySelector('.hud-center-group');
+      const toolbar = document.querySelector('.toolbar-hud');
+      const radar = document.querySelector('.radar-widget');
+
+      if (tab === '360') {
+        document.getElementById('btn-mode-360').classList.add('active');
+        canvas.style.display = 'block';
+        stripContainer.style.display = 'none';
+        drawer.style.display = 'block';
+        hudCenter.style.display = 'flex';
+        toolbar.style.display = 'flex';
+        radar.style.display = 'flex';
+        onWindowResize();
+      } else {
+        document.getElementById('btn-mode-strip').classList.add('active');
+        canvas.style.display = 'none';
+        stripContainer.style.display = 'flex';
+        drawer.style.display = 'none';
+        hudCenter.style.display = 'none';
+        toolbar.style.display = 'none';
+        radar.style.display = 'none';
+      }
+    }
+
+    // Fullscreen Photo Lightbox
+    function inspectCurrentPhoto() {
+      openLightbox(sitePhotos[currentPhotoIndex].file);
+    }
+
+    function openLightbox(src) {
+      const box = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = src;
+      box.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', init360Viewer);
+  </script>
+</body>
+</html>
